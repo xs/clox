@@ -11,11 +11,11 @@ int main(int argc, const char* argv[]) {
   int constant = addConstant(&chunk, 1.2);
 
   // write two bytes to the chunk; an OpCode then a constant index
-  writeChunk(&chunk, OP_CONSTANT);
-  writeChunk(&chunk, constant);
+  writeChunk(&chunk, OP_CONSTANT, 123);
+  writeChunk(&chunk, constant, 123);
 
   // write OP_RETURN to chunk
-  writeChunk(&chunk, OP_RETURN);
+  writeChunk(&chunk, OP_RETURN, 123);
 
   // disassemble (i.e. print the chunk's contents)
   disassembleChunk(&chunk, "test chunk");
