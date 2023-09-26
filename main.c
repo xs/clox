@@ -23,6 +23,9 @@ int main(int argc, const char* argv[]) {
   // disassemble (i.e. print the chunk's contents)
   disassembleChunk(&chunk, "test chunk");
 
+  // actually do the interpreting
+  interpret(&chunk);
+
   // free memory / clean up
   freeVM();
   freeChunk(&chunk);
