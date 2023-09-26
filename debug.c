@@ -29,7 +29,16 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
 
 // prints the offset of the instruction, then the instruction itself
 int disassembleInstruction(Chunk* chunk, int offset) {
+  // print the offset into the chunk
   printf("%04d ", offset);
+
+  // print the line number (or "|" if the line no. is the same as previous)
+  if (offset > 0 &&
+      chunk->lines[offset] == chunk->lines[offset - 1]) {
+    printf("   | ");
+  } else {
+    printf("%4d ", chunk->lines[offset]);
+  }
 
   uint8_t instruction = chunk->code[offset];
   switch (instruction) {
