@@ -2,6 +2,7 @@
 
 #include "debug.h"
 
+// prints the contents of a chunk in human-readable form
 void disassembleChunk(Chunk* chunk, const char* name) {
   printf("== %s ==\n", name);
 
@@ -15,6 +16,7 @@ static int simpleInstruction(const char* name, int offset) {
   return offset + 1;
 }
 
+// prints the offset of the instruction, then the instruction itself
 int disassembleInstruction(Chunk* chunk, int offset) {
   printf("%04d ", offset);
 
