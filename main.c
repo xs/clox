@@ -16,14 +16,15 @@ int main(int argc, const char* argv[]) {
   // write two bytes to the chunk; an OpCode then a constant index
   writeChunk(&chunk, OP_CONSTANT, 123);
   writeChunk(&chunk, constant, 123);
-  writeChunk(&chunk, OP_NEGATE, 123);
 
+  // add a NEGATE unary instruction
+  writeChunk(&chunk, OP_NEGATE, 123);
 
   // write OP_RETURN to chunk
   writeChunk(&chunk, OP_RETURN, 123);
 
   // disassemble (i.e. print the chunk's contents)
-  disassembleChunk(&chunk, "test chunk");
+  // disassembleChunk(&chunk, "test chunk");
 
   // actually do the interpreting
   interpret(&chunk);
