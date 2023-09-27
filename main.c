@@ -17,6 +17,22 @@ int main(int argc, const char* argv[]) {
   writeChunk(&chunk, OP_CONSTANT, 123);
   writeChunk(&chunk, constant, 123);
 
+  // reuse the constant var to add a new double 3.4
+  constant = addConstant(&chunk, 3.4);
+  writeChunk(&chunk, OP_CONSTANT, 123);
+  writeChunk(&chunk, constant, 123);
+
+  // add the top two on the stack (1.2  + 3.4) = (4.6)
+  writeChunk(&chunk, OP_ADD, 123);
+
+  // add a new constant: 5.6
+  constant = addConstant(&chunk, 5.6);
+  writeChunk(&chunk, OP_CONSTANT, 123);
+  writeChunk(&chunk, constant, 123);
+
+  // divide the top two on the stack (4.6 / 5.6) = 0.821429
+  writeChunk(&chunk, OP_DIVIDE, 123);
+
   // add a NEGATE unary instruction
   writeChunk(&chunk, OP_NEGATE, 123);
 
