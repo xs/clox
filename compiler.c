@@ -13,6 +13,20 @@ typedef struct {
   bool panicMode;
 } Parser;
 
+typedef enum {
+  PREC_NONE,
+  PREC_ASSIGNMENT,  // =
+  PREC_OR,          // or
+  PREC_AND,         // and
+  PREC_EQUALITY,    // == !=
+  PREC_COMPARISON,  // < > <= >=
+  PREC_TERM,        // + -
+  PREC_FACTOR,      // * /
+  PREC_UNARY,       // ! -
+  PREC_CALL,        // . ()
+  PREC_PRIMARY
+} Precedence;
+
 Parser parser;
 Chunk* compilingChunk;
 
@@ -95,13 +109,39 @@ static void emitConstant(Value value) {
 static void endCompiler() {
   emitReturn();
 }
+static void expression();
+static void parsePrecedence(Precedence precedence);
+// endCompiler()
+
+static void grouping() {
+  expression();
+  consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
 
 static void number() {
   double value = strtod(parser.previous.start, NULL);
   emitConstant(value);
 }
 
+static void unary() {
+  // the unary token is sitting in parser.previous
+  TokenType operatorType = parser.previous.type;
+
+  // emit all the bytes of the expression
+  parsePrecedence(PREC_UNARY);
+
+  switch (operatorType) {
+    case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+    default: return; // for now we don't get here; "-" is the only unary operator
+  }
+}
+
+static void parsePrecedence(Precedence precedence) {
+  // huh?
+}
+
 static void expression() {
+  parsePrecedence(PREC_ASSIGNMENT);
   // this thing has to read tokens and spit out bytecode in the correct order
 }
 
