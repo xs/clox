@@ -40,10 +40,12 @@ static Token errorToken(const char* message) {
   return token;
 }
 
+// scans the next token with the global scanner
 Token scanToken() {
-  // move scanner lexeme start to
+  // move scanner start to the curent
   scanner.start = scanner.current;
 
+  // isAtEnd looks for the \0 byte
   if (isAtEnd()) return makeToken(TOKEN_EOF);
 
   return errorToken("Unexpected character.");

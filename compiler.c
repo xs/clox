@@ -15,6 +15,7 @@ void compile(const char* source) {
     } else {
       printf("   | ");
     }
+    // print token type then the first length chars beginning at token.start
     printf("%2d '%.*s'\n", token.type, token.length, token.start);
 
     if (token.type == TOKEN_EOF) break;
