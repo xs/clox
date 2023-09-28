@@ -18,6 +18,10 @@ void initScanner(const char* source) {
   scanner.line = 1;
 }
 
+static bool isDigit(char c) {
+  return c >= '0' && c <= '9';
+}
+
 static bool isAtEnd() {
   return *scanner.current == '\0';
 }
@@ -41,6 +45,24 @@ static char peek() {
 static char peekNext() {
   if (isAtEnd()) return '\0';
   return *(scanner.current + 1);
+}
+
+static Token makeToken(TokenType type) {
+  Token token;
+  token.type = type;
+  token.start = scanner.start;
+  token.length = (int)(scanner.current - scanner.start);
+  token.line = scanner.line;
+  return token;
+}
+
+static Token errorToken(const char* message) {
+  Token token;
+  token.type = TOKEN_ERROR;
+  token.start = message;
+  token.length = (int)strlen(message);
+  token.line = scanner.line;
+  return token;
 }
 
 static void skipWhitespace() {
@@ -68,24 +90,6 @@ static void skipWhitespace() {
   }
 }
 
-static Token makeToken(TokenType type) {
-  Token token;
-  token.type = type;
-  token.start = scanner.start;
-  token.length = (int)(scanner.current - scanner.start);
-  token.line = scanner.line;
-  return token;
-}
-
-static Token errorToken(const char* message) {
-  Token token;
-  token.type = TOKEN_ERROR;
-  token.start = message;
-  token.length = (int)strlen(message);
-  token.line = scanner.line;
-  return token;
-}
-
 static Token string() {
   while (peek() != '"' && !isAtEnd()) {
     if (peek() == '\n') scanner.line++;
@@ -97,6 +101,21 @@ static Token string() {
   // The closing quote.
   advance();
   return makeToken(TOKEN_STRING);
+}
+
+static Token number() {
+  while (isDigit(peek())) advance();
+
+  // only once, look for a decimal
+  if (peek() == '.' && isDigit(peekNext())) {
+    // consume the decimal point
+    advance();
+
+    // only accept digits from here on
+    while (isDigit(peek())) advance();
+  }
+
+  return makeToken(TOKEN_NUMBER);
 }
 
 // scans the next token with the global scanner
@@ -111,6 +130,7 @@ Token scanToken() {
   if (isAtEnd()) return makeToken(TOKEN_EOF);
 
   char c = advance();
+  if (isDigit(c)) return number();
 
   switch (c) {
     case '(': return makeToken(TOKEN_LEFT_PAREN);
