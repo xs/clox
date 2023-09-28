@@ -27,6 +27,47 @@ static char advance() {
   return scanner.current[-1];
 }
 
+static bool match(char expected) {
+  if (isAtEnd()) return false;
+  if (*scanner.current != expected) return false;
+  scanner.current++;
+  return true;
+}
+
+static char peek() {
+  return *scanner.current;
+}
+
+static char peekNext() {
+  if (isAtEnd()) return '\0';
+  return *(scanner.current + 1);
+}
+
+static void skipWhitespace() {
+  for (;;) {
+    switch (*scanner.current) {
+      case '\n':
+        scanner.line++;
+      case ' ':
+      case '\r':
+      case '\t':
+        advance();
+        break;
+      case '/':
+        if (peekNext() == '/') {
+          // a comment starts with two slashes and goes to EOL)
+          // skip everything up to the newline
+          while (peekNext() != '\n' && !isAtEnd()) advance();
+        } else {
+          // a single slash is meaningful and shouldn't be skipped
+          return;
+        }
+      default:
+        return;
+    }
+  }
+}
+
 static Token makeToken(TokenType type) {
   Token token;
   token.type = type;
@@ -47,6 +88,9 @@ static Token errorToken(const char* message) {
 
 // scans the next token with the global scanner
 Token scanToken() {
+  // ignore whitespace
+  skipWhitespace();
+
   // move scanner start to the curent
   scanner.start = scanner.current;
 
@@ -67,6 +111,18 @@ Token scanToken() {
     case '+': return makeToken(TOKEN_PLUS);
     case '/': return makeToken(TOKEN_SLASH);
     case '*': return makeToken(TOKEN_STAR);
+    case '!':
+      return makeToken(
+        match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
+    case '=':
+      return makeToken(
+        match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
+    case '<':
+      return makeToken(
+        match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
+    case '>':
+      return makeToken(
+        match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
   }
 
   return errorToken("Unexpected character.");
