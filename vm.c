@@ -80,6 +80,7 @@ InterpretResult interpret(const char* source) {
   vm.chunk = &chunk;
   vm.ip = chunk.code;
 
+  // run the bytecode instructions
   InterpretResult result = run();
 
   freeChunk(&chunk);
