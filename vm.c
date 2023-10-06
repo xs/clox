@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
 #include "object.h"
 #include "value.h"
 #include "vm.h"
@@ -17,9 +19,11 @@ static void resetStack() {
 
 void initVM() {
   resetStack();
+  vm.objects = NULL;
 }
 
 void freeVM() {
+  freeObjects();
 }
 
 static void runtimeError(const char* format, ...) {
