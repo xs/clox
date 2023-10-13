@@ -20,10 +20,13 @@ static void resetStack() {
 void initVM() {
   resetStack();
   vm.objects = NULL;
+
+  initTable(&vm.globals);
   initTable(&vm.strings);
 }
 
 void freeVM() {
+  freeTable(&vm.globals);
   freeTable(&vm.strings);
   freeObjects();
 }
@@ -65,6 +68,7 @@ static void concatenate() {
 
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
   // valueType is the *return value* type. note that inputs must be numbers
@@ -108,6 +112,12 @@ printf("\n== %s ==", "execution");
       case OP_TRUE:     push(BOOL_VAL(true));     break;
       case OP_FALSE:    push(BOOL_VAL(false));    break;
       case OP_POP:      pop();                    break;
+      case OP_DEFINE_GLOBAL: {
+        ObjString* name = READ_STRING();
+        tableSet(&vm.globals, name, peek(0));
+        pop();
+        break;
+      }
       case OP_EQUAL: {
         Value b = pop();
         Value a = pop();
@@ -156,6 +166,7 @@ printf("\n== %s ==", "execution");
   }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 
