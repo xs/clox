@@ -21,9 +21,23 @@ void freeTable(Table* table) {
 
 static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
   uint32_t index = key->hash % capacity;
+  Entry* tombstone = NULL;
   for (;;) {
     Entry* entry = &entries[index];
-    if (entry->key == key || entry->key == NULL) {
+
+    if (entry->key == NULL) {
+      // we could either have an empty entry or a tombstone
+      if (IS_NIL(entry->value)) {
+        // here we have an empty entry so return early
+        // but reuse the first tombstone we saw if possible
+        return tombstone != NULL ? tombstone : entry;
+      } else {
+        // in this case, entry->value is true, so it's a tombstone
+        // and we keep probing
+        if (tombstone == NULL) tombstone = entry;
+      }
+    } else if (entry->key == key) {
+      // found actual bucket
       return entry;
     }
 
@@ -31,6 +45,16 @@ static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     // key matches or we hit an empty bucket
     index = (index + 1) % capacity;
   }
+}
+
+bool tableGet(Table* table, ObjString* key, Value* value) {
+  if (table->count == 0) return false;
+
+  Entry* entry = findEntry(table->entries, table->capacity, key);
+  if (entry->key == NULL) return false;
+
+  *value = entry->value;
+  return true;
 }
 
 static void adjustCapacity(Table* table, int capacity) {
@@ -42,6 +66,7 @@ static void adjustCapacity(Table* table, int capacity) {
   }
 
   // for present capacity, figure out the new table's buckets for current keys
+  table->count = 0;
   for (int i = 0; i < table->capacity; i++) {
     Entry* entry = &table->entries[i];
     if (entry->key == NULL) continue;
@@ -49,6 +74,7 @@ static void adjustCapacity(Table* table, int capacity) {
     Entry* dest = findEntry(entries, capacity, entry->key);
     dest->key = entry->key;
     dest->value = entry->value;
+    table->count++;
   }
 
   // release the old table
@@ -67,12 +93,26 @@ bool tableSet(Table* table, ObjString* key, Value value) {
   // findEntry either finds the actual key's bucketj or the first empty bucket
   Entry* entry = findEntry(table->entries, table->capacity, key);
   bool isNewKey = entry->key == NULL;
-  if (isNewKey) table->count++;
+  if (isNewKey && IS_NIL(entry->value)) table->count++;
 
   entry->key = key;
   entry->value = value;
   return isNewKey;
 }
+
+bool tableDelete(Table *table, ObjString *key) {
+  if (table->count == 0) return false;
+
+  // find the entry
+  Entry* entry = findEntry(table->entries, table->capacity, key);
+  if (entry->key == NULL) return false;
+
+  // if we found an entry, add a tombstone. here it's a null key with true value
+  // since that combination won't be confused with an actual key/value
+  entry->key = NULL;
+  entry->value = BOOL_VAL(true);
+  return true;
+};
 
 // it's kind of like a ruby Hash.merge
 void tableAddAll(Table* from, Table* to) {
