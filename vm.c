@@ -112,10 +112,31 @@ printf("\n== %s ==", "execution");
       case OP_TRUE:     push(BOOL_VAL(true));     break;
       case OP_FALSE:    push(BOOL_VAL(false));    break;
       case OP_POP:      pop();                    break;
+      case OP_GET_GLOBAL: {
+        ObjString* name = READ_STRING();
+        Value value;
+        if (!tableGet(&vm.globals, name, &value)) {
+          runtimeError("Undefined variable '%s'.", name->chars);
+          return INTERPRET_RUNTIME_ERROR;
+        }
+        push(value);
+        break;
+      }
       case OP_DEFINE_GLOBAL: {
         ObjString* name = READ_STRING();
         tableSet(&vm.globals, name, peek(0));
         pop();
+        break;
+      }
+      case OP_SET_GLOBAL: {
+        ObjString* name = READ_STRING();
+        if (tableSet(&vm.globals, name, peek(0))) {
+          // remember: tableSet always writes the value, but returns true if a new value is written.
+          // only allow setting if we've previously declared the variable
+          tableDelete(&vm.globals, name);
+          runtimeError("Undefined variable '%s'.", name->chars);
+          return INTERPRET_RUNTIME_ERROR;
+        }
         break;
       }
       case OP_EQUAL: {
