@@ -123,3 +123,26 @@ void tableAddAll(Table* from, Table* to) {
     }
   }
 }
+
+// find a string in the table
+ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {
+  if (table->count == 0) return NULL;
+
+  uint32_t index = hash % table->capacity;
+
+  // this looks like findEntry but we memcmp chars instead of matching entry->key to key
+  for (;;) {
+    Entry* entry = &table->entries[index];
+    if (entry->key == NULL) {
+      // Stop if we find an empty non-tombstone entry.
+      if (IS_NIL(entry->value)) return NULL;
+    } else if (entry->key->length == length &&
+        entry->key->hash == hash &&
+        memcmp(entry->key->chars, chars, length) == 0) {
+      // We found it.
+      return entry->key;
+    }
+
+    index = (index + 1) % table->capacity;
+  }
+}
